@@ -1,0 +1,51 @@
+#define RCC_AHB1ENR *((int *)0X40023830)
+#define GPIOA_PUPDR *((int *)0X4002000C)
+#define RCC_APB2ENR *((int *)0X40023844)	
+#define SYSCFG_EXTICR1 *((int *)0X40013808)
+#define EXTI_IMR *((int *)0X40013C00)
+#define EXTI_FTSR *((int *)0X40013C0C)
+#define EXTI_SWIER *((int *)0X40013C10)
+#define EXTI_PR *((int *)0X40013C14)
+#define NVIC_ISER0 *((int *)0XE000E100)
+
+int counter=0;
+void WAKEUP_sw_Init()
+{
+	RCC_AHB1ENR |= 0X1;
+	while(!(RCC_AHB1ENR & 0X1))
+	{
+		;
+	}
+	
+	GPIOA_PUPDR |= 0X1;
+}
+void EXTI0_Init()
+{
+	RCC_APB2ENR |= 0X4000;
+	while(!(RCC_APB2ENR & 0X4000));
+	
+	SYSCFG_EXTICR1 &= ~(0x1);
+	EXTI_IMR |= 0X1;
+	EXTI_FTSR |= 0X1;
+	NVIC_ISER0 |= 0X40;
+}
+int main()
+{
+	WAKEUP_sw_Init();
+	EXTI0_Init();
+	
+	while(1)
+	{
+		;
+	}
+	
+	return 0;
+}
+void EXTI0_IRQHandler()
+{
+	if(EXTI_PR & 0X1)
+	{
+		counter++;
+		EXTI_PR |= (0X1);
+	}
+}

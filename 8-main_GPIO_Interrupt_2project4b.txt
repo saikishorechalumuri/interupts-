@@ -1,0 +1,79 @@
+#define RCC_AHB1ENR *((int *)0X40023830)
+#define GPIOA_MODER *((int *)0X40020000)
+#define GPIOA_ODR *((int *)0X40020014)
+#define GPIOC_MODER *((int *)0X40020800)
+#define GPIOC_ODR *((int *)0X40020814)
+#define GPIOC_PUPDR *((int *)0X4002080C)
+#define RCC_APB2ENR *((int *)0X40023844)
+#define SYSCFG_EXTICR3 *((int *)0X40013810)
+#define EXTI_IMR *((int *)0X40013C00)
+#define EXTI_FTSR *((int *)0X40013C0C)
+#define EXTI_PR *((int *)0X40013C14)
+#define NVIC_ISER0 *((int *)0XE000E100)
+
+int counter=0;
+
+void Toggle_RED_LED()
+{
+	if(GPIOC_ODR & (0X1<<5))
+		GPIOC_ODR &= ~(0X1<<5);
+	else
+		GPIOC_ODR |= (0X1<<5);
+}
+void Toggle_GREEN_LED()
+{
+	if(GPIOA_ODR & (0X1<<8))
+		GPIOA_ODR &= ~(0X1<<8);
+	else
+		GPIOA_ODR |= (0X1<<8);
+}
+void sw1_sw2_LEDs_Init()
+{
+	RCC_AHB1ENR |= 0X5;
+	while(!(RCC_AHB1ENR & 0X5));
+	
+	GPIOA_MODER |= (0X1<<16);
+	GPIOA_ODR |= (0X1<<8);
+	
+	GPIOC_MODER |= (0X1<<10);
+	GPIOC_ODR |= (0X1<<5);
+	
+	GPIOC_PUPDR |= (0X5<<16);
+}
+void EXTI9_EXTI8_Init()
+{
+	RCC_APB2ENR |= 0X4000;
+	while(!(RCC_APB2ENR & 0X4000));
+	
+	SYSCFG_EXTICR3 |= 0X22;
+	EXTI_IMR |= (0X3<<8);
+	EXTI_FTSR |= (0X3<<8);
+	NVIC_ISER0 |= (0X3<<22);
+}
+int main()
+{
+	sw1_sw2_LEDs_Init();
+	EXTI9_EXTI8_Init();
+	
+	while(1)
+	{
+		;
+	}
+	
+	return 0;
+}
+void EXTI9_5_IRQHandler()
+{
+	if(EXTI_PR & (0X1<<8))
+	{
+		counter++;
+		Toggle_RED_LED();
+		EXTI_PR |= (0X1<<8);
+	}
+	if(EXTI_PR & (0X1<<9))
+	{
+		counter++;
+		Toggle_GREEN_LED();
+		EXTI_PR |= (0X1<<9);
+	}
+}
